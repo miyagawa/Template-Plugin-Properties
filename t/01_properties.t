@@ -15,3 +15,21 @@ baz = [% props.get('baz', 'default baz') %]
 bar = baz
 foo = bar
 baz = default baz
+
+--test--
+[% USE props = Properties -%]
+[% props.set('foo.bar' => 'baz') -%]
+foo.bar = [% props.get('foo.bar') %]
+--expect--
+foo.bar = baz
+
+--test--
+[% USE props = Properties -%]
+[% text = BLOCK -%]
+foo.bar=baz
+[% END -%]
+[% props.parse(text) -%]
+foo.bar = [% props.get('foo.bar') %]
+--expect--
+foo.bar = baz
+

@@ -6,5 +6,6 @@ WriteMakefile(
 	'Test::More' => 0.32,
 	'Data::Properties' => 0.02,
 	'Template' => 2.08,
+	'IO::Scalar' => 0,
     },
 );

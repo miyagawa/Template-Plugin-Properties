@@ -2,21 +2,28 @@ package Template::Plugin::Properties;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = 0.01;
+$VERSION = 0.02;
 
 require Template::Plugin;
 use base qw(Template::Plugin);
 
 use Data::Properties;
 use FileHandle;
+use IO::Scalar;
+
+use vars qw($DYNAMIC $FILTER_NAME);
+$DYNAMIC = 1;
+$FILTER_NAME = 'parse_property';
 
 sub croak { require Carp; Carp::croak(@_); }
 
 sub new {
     my($class, $context, $filename, $params) = @_;
-    my $handle = FileHandle->new($filename) or croak("$filename: $!");
-    my $props  = Data::Properties->new;
-    $props->load($handle);
+    my $props = Data::Properties->new;
+    if ($filename) {
+	my $handle = FileHandle->new($filename) or croak("$filename: $!");
+	$props->load($handle);
+    }
     bless { _props => $props }, $class;
 }
 
@@ -27,11 +34,23 @@ sub get {
     $self->props->get_property(@_);
 }
 
+sub set {
+    my($self, $param) = @_;
+    $self->props->set_property(%$param);
+    return; # set_property() returns 1
+}
+
 sub names {
     my $self = shift;
     return $self->props->property_names;
 }
 
+sub parse {
+    my($self, $text) = @_;
+    my $handle = IO::Scalar->new(\$text);
+    $self->props->load($handle);
+    return;
+}
 
 1;
 __END__
@@ -49,6 +68,11 @@ Template::Plugin::Properties - TT Plugin to read Data::Properties file
 
   # get can accept default
   name is [% props.get('name', 'name (defaut)') %]
+
+  # construct without file is ok
+  [% USE props = Properties %]
+  [% props.set('foo.bar' => 'baz') %]
+  foo.bar = [% props.get('foo.bar') %]
 
 =head1 DESCRIPTION
 
